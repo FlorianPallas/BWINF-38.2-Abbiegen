@@ -5,8 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Abbiegen"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        SizeChanged="Window_SizeChanged"
+        Title="38. BWINF (Runde 2) - Aufgabe 3: Abbiegen?" MinHeight="400" MinWidth="600" ResizeMode="CanResize" WindowState="Maximized" WindowStartupLocation="CenterScreen">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Name="MenuItemFile" Header="_File">
+                <MenuItem Header="_Open" Name="MenuItemFileOpen" Click="MenuItemFileOpen_Click" />
+                <Separator />
+                <MenuItem Header="_Exit" Name="MenuItemFileExit" Click="MenuItemFileExit_Click" />
+            </MenuItem>
+            <MenuItem IsEnabled="False" Name="MenuItemCalculate" Click="MenuItemCalculate_Click" Header="Calculate" />
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom">
+
+        </StatusBar>
+        <Canvas Name="CanvasMain" />
+    </DockPanel>
 </Window>
