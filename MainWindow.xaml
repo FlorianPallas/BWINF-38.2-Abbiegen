@@ -11,14 +11,16 @@
         <DockPanel DockPanel.Dock="Left">
             <GroupBox Header="Aktionen" Margin="10 0 10 10" DockPanel.Dock="Bottom">
                 <StackPanel Margin="10">
+                    
+                    <Label  Content="Maximale Verlängerung" HorizontalAlignment="Center" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Content="Datei öffnen" Width="80" Padding="5" Name="ButtonOpen" Click="ButtonOpen_Click" />
-                        <Button Content="Beenden" Width="80" Padding="5" Margin="10 0 0 0" Name="ButtonExit" Click="ButtonExit_Click" />
-                    </StackPanel>
-                    <StackPanel Margin="0 10 0 0" Orientation="Horizontal" HorizontalAlignment="Center">
                         <TextBox Text="20" TextAlignment="Right" Name="TextBoxPercentage" Width="40" Padding="5" />
                         <Label Content="%" Margin="0 0 10 0" />
                         <Button IsEnabled="False" Content="Berechne Weg" Padding="10 5" Name="ButtonCalculate" Click="ButtonCalculate_Click" />
+                    </StackPanel>
+                    <StackPanel Margin="0 10 0 0" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="Datei öffnen" Width="100" Padding="5" Name="ButtonOpen" Click="ButtonOpen_Click" />
+                        <Button Content="Beenden" Width="100" Padding="5" Margin="15 0 0 0" Name="ButtonExit" Click="ButtonExit_Click" />
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
