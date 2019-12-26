@@ -25,9 +25,15 @@ namespace Abbiegen
         public TJunction StartJunction;
         public TJunction EndJunction;
 
-        private List<TJunction> _ShortestPath;
         public TJunction[] ShortestPath;
         public double ShortestPath_Length;
+        public int ShortestPath_Turns;
+
+        private int TurnLimit;
+        private double LengthLimit;
+        public TJunction[] PathWithLeastTurns;
+        public double PathWithLeastTurns_Length;
+        public int PathWithLeastTurns_Turns;
 
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         // CONSTRUCTOR
@@ -41,6 +47,7 @@ namespace Abbiegen
             EndJunction = null;
             ShortestPath = null;
             ShortestPath_Length = 0.0;
+            ShortestPath_Turns = 0;
 
             // Generate streetmap
             GenerateFromStreets(_Streets, _Startpoint, _Endpoint);
@@ -114,7 +121,7 @@ namespace Abbiegen
             foreach (TJunction J in Junctions)
             {
                 J.Distance = double.PositiveInfinity;
-                J.PreVertex = null;
+                J.PreviousJunction = null;
                 Remaining.Add(J);
             }
 
@@ -131,8 +138,7 @@ namespace Abbiegen
                 // Finish
                 if (Current == EndJunction)
                 {
-                    GetShortestPath();
-                    ShortestPath = _ShortestPath.ToArray();
+                    GetCurrentPath(out ShortestPath, out ShortestPath_Length, out ShortestPath_Turns);
                     return true;
                 }
 
@@ -143,7 +149,7 @@ namespace Abbiegen
                     if (Alt < Neighbor.Distance)
                     {
                         Neighbor.Distance = Alt;
-                        Neighbor.PreVertex = Current;
+                        Neighbor.PreviousJunction = Current;
                     }
                 }
             }
@@ -152,42 +158,162 @@ namespace Abbiegen
             return false;
         }
 
-        private void GetShortestPath()
-        {
-            ShortestPath_Length = 0.0;
-
-            List<TJunction> S = new List<TJunction>();
-            TJunction Current = EndJunction;
-
-            if (Current.PreVertex != null || Current == StartJunction)
-            {
-                while (Current != null)
-                {
-                    S.Add(Current);
-                    if(Current != StartJunction)
-                    {
-                        ShortestPath_Length += Current.DistanceTo(Current.PreVertex);
-                    }
-                    Current = Current.PreVertex;
-                }
-            }
-
-            S.Reverse();
-            _ShortestPath = S;
-        }
-
-        private TJunction ClosestJunction(List<TJunction> Q)
+        private TJunction ClosestJunction(List<TJunction> Junctions)
         {
             TJunction ClosestJunction = null;
-            foreach (TJunction V in Q)
+            foreach (TJunction Junction in Junctions)
             {
-                if (ClosestJunction == null || V.Distance < ClosestJunction.Distance)
+                if (ClosestJunction == null || Junction.Distance < ClosestJunction.Distance)
                 {
-                    ClosestJunction = V;
+                    ClosestJunction = Junction;
                 }
             }
 
             return ClosestJunction;
+        }
+
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        // Store unvisited junctions
+        List<TJunction> Remaining = new List<TJunction>();
+
+        public bool CalculatePathWithLeastTurns(double Percentage)
+        {
+            // Set limits
+            double AdditionalLength = ShortestPath_Length / 100 * Percentage;
+            LengthLimit = ShortestPath_Length + AdditionalLength;
+            TurnLimit = ShortestPath_Turns;
+
+            // Set defaults
+            PathWithLeastTurns = null;
+            PathWithLeastTurns_Turns = TurnLimit;
+            PathWithLeastTurns_Length = 0.0;
+
+            Remaining.Clear();
+            Remaining.AddRange(Junctions);
+
+            foreach (TJunction J in Junctions)
+            {
+                J.PreviousJunction = null;
+            }
+
+            Step(0, 0, StartJunction);
+
+            // Return false if there is not better path
+            if(PathWithLeastTurns == null)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        private void Step(double Length, int Turns, TJunction Current)
+        {
+            Remaining.Remove(Current);
+
+            if(Length > LengthLimit)
+            {
+                Remaining.Add(Current);
+                return;
+            }
+
+            if (Turns >= TurnLimit)
+            {
+                Remaining.Add(Current);
+                return;
+            }
+
+            if (Current == EndJunction)
+            {
+                GetCurrentPath(out TJunction[] _Path, out double _Length, out int _Turns);
+
+                if(_Turns < PathWithLeastTurns_Turns)
+                {
+                    PathWithLeastTurns = _Path;
+                    PathWithLeastTurns_Length = _Length;
+                    PathWithLeastTurns_Turns = _Turns;
+                    TurnLimit = _Turns;
+                }
+                else if(_Turns == PathWithLeastTurns_Turns && _Length < PathWithLeastTurns_Length)
+                {
+                    PathWithLeastTurns = _Path;
+                    PathWithLeastTurns_Length = _Length;
+                    PathWithLeastTurns_Turns = _Turns;
+                    TurnLimit = _Turns;
+                }
+
+                Remaining.Add(Current);
+                return;
+            }
+
+            // Iterate
+            foreach (TJunction Neighbor in Current.Neighbors)
+            {
+                if (Remaining.Contains(Neighbor))
+                {
+                    int NewTurns = Turns;
+                    Neighbor.PreviousJunction = Current;
+                    if(Current.PreviousJunction != null)
+                    {
+                        if(Current.HasToTurn(Current.PreviousJunction, Neighbor))
+                        {
+                            NewTurns++;
+                        }
+                    }
+                    Step(Length + Current.DistanceTo(Neighbor), NewTurns, Neighbor);
+                    Neighbor.PreviousJunction = null;
+                }
+            }
+
+            Remaining.Add(Current);
+        }
+
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        public int TurnsAlongPath(TJunction[] Path)
+        {
+            int Turns = 0;
+
+            for(int I = 1; I < Path.Length - 1; I++)
+            {
+                if(Path[I].HasToTurn(Path[I - 1], Path[I + 1]))
+                {
+                    Turns++;
+                }
+            }
+
+            return Turns;
+        }
+
+        private void GetCurrentPath(out TJunction[] Path, out double Length, out int Turns)
+        {
+            Length = 0.0;
+            List<TJunction> _Path = new List<TJunction>();
+            TJunction Current = EndJunction;
+
+            if (Current.PreviousJunction != null || Current == StartJunction)
+            {
+                while (Current != null)
+                {
+                    _Path.Add(Current);
+
+                    // Add to length
+                    if (Current != StartJunction)
+                    {
+                        Length += Current.DistanceTo(Current.PreviousJunction);
+                    }
+
+                    Current = Current.PreviousJunction;
+                }
+            }
+
+            _Path.Reverse();
+
+            Path = _Path.ToArray();
+            Turns = TurnsAlongPath(Path);
         }
 
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -209,7 +335,7 @@ namespace Abbiegen
         public List<TJunction> Neighbors;
         public List<double> NeighborValues;
 
-        public TJunction PreVertex;
+        public TJunction PreviousJunction;
         public double Distance;
 
         public double DistanceTo(TJunction _Neighbor)
@@ -217,6 +343,24 @@ namespace Abbiegen
             int Index = Neighbors.FindIndex(x => x == _Neighbor);
 
             return NeighborValues[Index];
+        }
+
+        public bool HasToTurn(TJunction A, TJunction C)
+        {
+            // Calculate angle between incoming and outgoing street
+            Vector AB = new Vector(Location.X - A.Location.X, Location.Y - A.Location.Y);
+            Vector BC = new Vector(C.Location.X - Location.X, C.Location.Y - Location.Y);
+            double Angle = Vector.AngleBetween(AB, BC);
+
+            // If the angle is other than 0 its a turn
+            if(Angle == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 

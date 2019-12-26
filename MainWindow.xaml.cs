@@ -58,15 +58,56 @@ namespace Abbiegen
         // METHODS
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        private void Calculate()
+        private void FindPath()
         {
-            if (!Streetmap.CalculateShortestPath())
+            // Parse input percentage
+            double Percentage;
+            try
             {
-                MessageBox.Show("Es konnte kein Weg bestimmt werden!", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                Percentage = double.Parse(TextBoxPercentage.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Ungültige Eingabe", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            MessageBox.Show("Kürzester Weg erfolgreich berechnet.\n" + Streetmap.ShortestPath_Length.ToString("#.00") + "LE", "Operation erfolgreich", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Calculate path
+            if (Streetmap.CalculatePathWithLeastTurns(Percentage))
+            {
+                // Display new path
+                LabelNewPathLength.Content = Streetmap.PathWithLeastTurns_Length.ToString("#.00") + "LE";
+                double Increase = (Streetmap.PathWithLeastTurns_Length - Streetmap.ShortestPath_Length) / (Streetmap.ShortestPath_Length / 100);
+                LabelNewPathIncrease.Content = "(+ " + Increase.ToString("#.0") + "%)";
+                LabelNewPathTurns.Content = Streetmap.PathWithLeastTurns_Turns + " mal";
+            }
+            else
+            {
+                // Display shortest path if its the best
+                LabelNewPathLength.Content = Streetmap.ShortestPath_Length.ToString("#.00") + "LE";
+                LabelNewPathIncrease.Content = "(+ 0%)";
+                LabelNewPathTurns.Content = Streetmap.ShortestPath_Turns + " mal";
+            }
+
+            StackPanelNewPath.Visibility = Visibility.Visible;
+        }
+
+        private void FindShortestPath()
+        {
+            // Calculate path
+            if (!Streetmap.CalculateShortestPath())
+            {
+                MessageBox.Show("Es konnte kein Weg zum Ziel gefunden werden!", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                ButtonCalculate.IsEnabled = false;
+                return;
+            }
+
+            // Update Interface
+            LabelShortestPathLength.Content = Streetmap.ShortestPath_Length.ToString("#.00") + "LE";
+            LabelShortestPathTurns.Content = Streetmap.ShortestPath_Turns + "mal";
+
+            ButtonCalculate.IsEnabled = true;
+            StackPanelShortestPath.Visibility = Visibility.Visible;
         }
 
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -78,7 +119,14 @@ namespace Abbiegen
 
             Draw_SetParameters();
             Draw_Streets();
-            Draw_Path(Streetmap.ShortestPath, Brushes.Green, 0.05);
+            if(Streetmap.PathWithLeastTurns == null)
+            {
+                Draw_Path(Streetmap.ShortestPath, Brushes.Blue, 0.05);
+            }
+            else
+            {
+                Draw_Path(Streetmap.PathWithLeastTurns, Brushes.Blue, 0.05);
+            }
             Draw_StartEnd();
             Draw_Junctions();
             Draw_StartEndText();
@@ -271,12 +319,10 @@ namespace Abbiegen
                 Streetmap = new TStreetmap(Streets, Startpoint, Endpoint);
 
                 MessageBox.Show("Die Datei wurde erfolgreich eingelesen.", "Operation erfolgreich", MessageBoxButton.OK, MessageBoxImage.Information);
-                MenuItemCalculate.IsEnabled = true;
             }
             catch
             {
                 MessageBox.Show("Die Datei konnte nicht eingelesen werden!", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
-                MenuItemCalculate.IsEnabled = false;
             }
         }
 
@@ -294,32 +340,36 @@ namespace Abbiegen
         // HANDLERS
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        private void MenuItemCalculate_Click(object sender, RoutedEventArgs e)
-        {
-            Calculate();
-            Draw();
-        }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-        private void MenuItemFileOpen_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFile();
-            Draw();
-        }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-        private void MenuItemFileExit_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             Draw();
+        }
+
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        private void ButtonOpen_Click(object sender, RoutedEventArgs e)
+        {
+            ButtonCalculate.IsEnabled = false;
+            StackPanelShortestPath.Visibility = Visibility.Collapsed;
+            StackPanelNewPath.Visibility = Visibility.Collapsed;
+            OpenFile();
+            FindShortestPath();
+            Draw();
+        }
+
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        private void ButtonCalculate_Click(object sender, RoutedEventArgs e)
+        {
+            FindPath();
+            Draw();
+        }
+
+        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        private void ButtonExit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
