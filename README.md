@@ -1,1 +1,1 @@
-"# BWINF-38.2-Abbiegen" 
+# BWINF 38.2 - Abbiegen
