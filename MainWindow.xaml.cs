@@ -58,56 +58,30 @@ namespace Abbiegen
         // METHODS
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        private void FindPath()
+        private void CalculatePath(double Percentage)
         {
-            // Parse input percentage
-            double Percentage;
-            try
-            {
-                Percentage = double.Parse(TextBoxPercentage.Text);
-            }
-            catch
-            {
-                MessageBox.Show("Ungültige Eingabe", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
             // Calculate path
             if (Streetmap.CalculatePathWithLeastTurns(Percentage))
             {
                 // Display new path
-                LabelNewPathLength.Content = Streetmap.PathWithLeastTurns_Length.ToString("#.00") + "LE";
+                LabelPathLength.Content = Streetmap.PathWithLeastTurns_Length.ToString("#.00") + "LE";
                 double Increase = (Streetmap.PathWithLeastTurns_Length - Streetmap.ShortestPath_Length) / (Streetmap.ShortestPath_Length / 100);
-                LabelNewPathIncrease.Content = "(+ " + Increase.ToString("#.0") + "%)";
-                LabelNewPathTurns.Content = Streetmap.PathWithLeastTurns_Turns + " mal";
+                LabelPathIncrease.Content = "(+ " + Increase.ToString("#.00") + "%)";
+                LabelPathTurns.Content = Streetmap.PathWithLeastTurns_Turns + " mal";
             }
             else
             {
                 // Display shortest path if its the best
-                LabelNewPathLength.Content = Streetmap.ShortestPath_Length.ToString("#.00") + "LE";
-                LabelNewPathIncrease.Content = "(+ 0%)";
-                LabelNewPathTurns.Content = Streetmap.ShortestPath_Turns + " mal";
+                LabelPathLength.Content = Streetmap.ShortestPath_Length.ToString("#.00") + "LE";
+                LabelPathIncrease.Content = "(+ 0%)";
+                LabelPathTurns.Content = Streetmap.ShortestPath_Turns + " mal";
             }
 
-            StackPanelNewPath.Visibility = Visibility.Visible;
-        }
-
-        private void FindShortestPath()
-        {
-            // Calculate path
-            if (!Streetmap.CalculateShortestPath())
+            // Remove increase percentage if it's the shortest path
+            if (Percentage == 0)
             {
-                MessageBox.Show("Es konnte kein Weg zum Ziel gefunden werden!", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
-                ButtonCalculate.IsEnabled = false;
-                return;
+                LabelPathIncrease.Content = String.Empty;
             }
-
-            // Update Interface
-            LabelShortestPathLength.Content = Streetmap.ShortestPath_Length.ToString("#.00") + "LE";
-            LabelShortestPathTurns.Content = Streetmap.ShortestPath_Turns + "mal";
-
-            ButtonCalculate.IsEnabled = true;
-            StackPanelShortestPath.Visibility = Visibility.Visible;
         }
 
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -119,6 +93,8 @@ namespace Abbiegen
 
             Draw_SetParameters();
             Draw_Streets();
+
+            // Draw shortest or best path
             if(Streetmap.PathWithLeastTurns == null)
             {
                 Draw_Path(Streetmap.ShortestPath, Brushes.Blue, 0.05);
@@ -127,6 +103,7 @@ namespace Abbiegen
             {
                 Draw_Path(Streetmap.PathWithLeastTurns, Brushes.Blue, 0.05);
             }
+
             Draw_StartEnd();
             Draw_Junctions();
             Draw_StartEndText();
@@ -262,7 +239,7 @@ namespace Abbiegen
 
         // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        private void OpenFile()
+        private bool OpenFile()
         {
             // Open file dialog
             Microsoft.Win32.OpenFileDialog Dlg = new Microsoft.Win32.OpenFileDialog()
@@ -274,7 +251,7 @@ namespace Abbiegen
             // Return if user cancels selection
             if (Dlg.ShowDialog() != true)
             {
-                return;
+                return false;
             }
 
             // Read file contents
@@ -289,7 +266,7 @@ namespace Abbiegen
             catch
             {
                 MessageBox.Show("Die Datei konnte nicht eingelesen werden.");
-                return;
+                return false;
             }
             finally
             {
@@ -323,7 +300,10 @@ namespace Abbiegen
             catch
             {
                 MessageBox.Show("Die Datei konnte nicht eingelesen werden!", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
+
+            return true;
         }
 
         private Point PointFromString(string S)
@@ -342,6 +322,7 @@ namespace Abbiegen
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
+            // Update UI
             Draw();
         }
 
@@ -349,11 +330,30 @@ namespace Abbiegen
 
         private void ButtonOpen_Click(object sender, RoutedEventArgs e)
         {
+            // Update UI
             ButtonCalculate.IsEnabled = false;
-            StackPanelShortestPath.Visibility = Visibility.Collapsed;
-            StackPanelNewPath.Visibility = Visibility.Collapsed;
-            OpenFile();
-            FindShortestPath();
+            StackPanelPath.Visibility = Visibility.Collapsed;
+            
+            // Read file
+            if (!OpenFile())
+            {
+                return;
+            }
+
+            // Calculate path
+            if (!Streetmap.CalculateShortestPath())
+            {
+                MessageBox.Show("Es konnte kein Weg zum Ziel gefunden werden!", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                ButtonCalculate.IsEnabled = false;
+                return;
+            }
+
+            // Check if there is a path with less turns
+            CalculatePath(0);
+
+            // Update UI
+            StackPanelPath.Visibility = Visibility.Visible;
+            ButtonCalculate.IsEnabled = true;
             Draw();
         }
 
@@ -361,7 +361,22 @@ namespace Abbiegen
 
         private void ButtonCalculate_Click(object sender, RoutedEventArgs e)
         {
-            FindPath();
+            // Parse input percentage
+            double Percentage;
+            try
+            {
+                Percentage = double.Parse(TextBoxPercentage.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Ungültige Eingabe", "Operation fehlgeschlagen", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // Calculate path
+            CalculatePath(Percentage);
+
+            // Update UI
             Draw();
         }
 

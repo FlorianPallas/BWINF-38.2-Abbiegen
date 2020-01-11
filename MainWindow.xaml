@@ -11,10 +11,9 @@
         <DockPanel DockPanel.Dock="Left">
             <GroupBox Header="Aktionen" Margin="10 0 10 10" DockPanel.Dock="Bottom">
                 <StackPanel Margin="10">
-                    
                     <Label  Content="Maximale Verlängerung" HorizontalAlignment="Center" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBox Text="20" TextAlignment="Right" Name="TextBoxPercentage" Width="40" Padding="5" />
+                        <TextBox Text="0" TextAlignment="Right" Name="TextBoxPercentage" Width="40" Padding="5" />
                         <Label Content="%" Margin="0 0 10 0" />
                         <Button IsEnabled="False" Content="Berechne Weg" Padding="10 5" Name="ButtonCalculate" Click="ButtonCalculate_Click" />
                     </StackPanel>
@@ -24,29 +23,17 @@
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Header="Statistiken" Margin="10" Width="250">
+            <GroupBox Header="Wegdaten" Margin="10" Width="250">
                 <StackPanel Margin="10">
-                    <StackPanel Margin="0 0 0 10" Name="StackPanelShortestPath" Visibility="Collapsed">
-                        <Label FontWeight="Bold" HorizontalAlignment="Center" Content="Kürzester Weg:" />
+                    <StackPanel  Name="StackPanelPath" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <Label Width="75" Content="Länge:" />
-                            <Label Name="LabelShortestPathLength" />
+                            <Label Name="LabelPathLength" />
+                            <Label Name="LabelPathIncrease" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Label Width="75" Content="Abbiegen:" />
-                            <Label Name="LabelShortestPathTurns" />
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel  Name="StackPanelNewPath" Visibility="Collapsed">
-                        <Label FontWeight="Bold" HorizontalAlignment="Center" Content="Neuer Weg:" />
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="75" Content="Länge:" />
-                            <Label Name="LabelNewPathLength" />
-                            <Label Name="LabelNewPathIncrease" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="75" Content="Abbiegen:" />
-                            <Label Name="LabelNewPathTurns" />
+                            <Label Name="LabelPathTurns" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
