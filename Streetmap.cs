@@ -21,6 +21,8 @@ namespace Abbiegen
         // GLOBAL VARIABLES
         // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+        const double Epsilon = 10E-15;
+
         public TJunction[] Junctions;
         public TJunction StartJunction;
         public TJunction EndJunction;
@@ -214,13 +216,13 @@ namespace Abbiegen
         {
             Remaining.Remove(Current);
 
-            if(Length > LengthLimit)
+            if(Length - LengthLimit > Epsilon)
             {
                 Remaining.Add(Current);
                 return;
             }
 
-            if (Turns >= TurnLimit)
+            if (Turns > TurnLimit)
             {
                 Remaining.Add(Current);
                 return;
@@ -237,7 +239,7 @@ namespace Abbiegen
                     PathWithLeastTurns_Turns = _Turns;
                     TurnLimit = _Turns;
                 }
-                else if(_Turns == PathWithLeastTurns_Turns && _Length < PathWithLeastTurns_Length)
+                else if(_Turns == PathWithLeastTurns_Turns && _Length - Epsilon < PathWithLeastTurns_Length)
                 {
                     PathWithLeastTurns = _Path;
                     PathWithLeastTurns_Length = _Length;
