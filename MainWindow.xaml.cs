@@ -1,35 +1,15 @@
-﻿// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 namespace Abbiegen
 {
-    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    // CLASS MainWindow
-    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
     public partial class MainWindow : Window
     {
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        // GLOBAL VARIABLES
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+        // Streetmap
         Point Startpoint;
         Point Endpoint;
         Point[,] Streets;
@@ -45,18 +25,10 @@ namespace Abbiegen
         private double OffsetX = 0;
         private double OffsetY = 0;
 
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        // CONSTRUCTOR
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         public MainWindow()
         {
             InitializeComponent();
         }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        // METHODS
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         private void CalculatePath(double Percentage)
         {
@@ -83,8 +55,6 @@ namespace Abbiegen
                 LabelPathIncrease.Content = String.Empty;
             }
         }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         private void Draw()
         {
@@ -237,8 +207,6 @@ namespace Abbiegen
             return new Point((P.X - MinX) * Scale + OffsetX / 2, CanvasMain.ActualHeight - P.Y * Scale - OffsetY / 2);
         }
 
-        // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         private bool OpenFile()
         {
             // Open file dialog
@@ -316,17 +284,11 @@ namespace Abbiegen
             return P;
         }
 
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        // HANDLERS
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             // Update UI
             Draw();
         }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         private void ButtonOpen_Click(object sender, RoutedEventArgs e)
         {
@@ -357,8 +319,6 @@ namespace Abbiegen
             Draw();
         }
 
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         private void ButtonCalculate_Click(object sender, RoutedEventArgs e)
         {
             // Parse input percentage
@@ -380,17 +340,9 @@ namespace Abbiegen
             Draw();
         }
 
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
         private void ButtonExit_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }
-
-        // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     }
-
-    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 }
-
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
